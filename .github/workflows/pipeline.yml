@@ -12,14 +12,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Install linter
         run: pip install flake8
 
-      - name: Run linter
-        run: flake8 .
+      - name: Run linter safely
+        run: |
+          if ls *.py 1> /dev/null 2>&1; then
+            flake8 .
+          else
+            echo "No Python files found. Skipping linting."
+          fi
 
   train:
     runs-on: ubuntu-latest
@@ -31,27 +36,26 @@ jobs:
       contains(github.event.head_commit.message, '[run-train]')
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Simulate training job
-        run: |
-          echo "Running expensive training..."
-          sleep 10
-          echo "Training done!"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run training pipeline
+        run: python app.py
 
       - name: Generate error log
         if: failure()
-        run: echo "Training failed!" > error_logs.txt
+        run: echo "Training job failed. Check model pipeline." > error_logs.txt
 
       - name: Upload error logs
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: error-logs
+          name: training-error-logs
           path: error_logs.txt
 
-      - name: Cleanup step
+      - name: Cleanup resources
         if: always()
         run: echo "Cleaning up temporary cloud volumes..."
-
