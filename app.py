@@ -9,7 +9,7 @@ def main():
     # Run fixed one
     print("Training 'Expensive' Model...")
     model = RandomForestClassifier(n_estimators=10)
-    model.fit(X, y))
+    model.fit(X, y)
     
     # Check for a specific environment variable to simulate a failure if needed
     if os.getenv("SIMULATE_FAILURE") == "true":
