@@ -32,7 +32,7 @@ jobs:
       - name: Execute Model Training
         run: python app.py
         env:
-          SIMULATE_FAILURE:"true"
+          SIMULATE_FAILURE:"false"
 
       # UPLOAD ARTIFACT: Only triggers if the training step above fails
       - name: Archive Error Logs
