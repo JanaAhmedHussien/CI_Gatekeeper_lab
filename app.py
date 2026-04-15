@@ -1,49 +1,29 @@
-import numpy as np
+# app.py
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-
-
-def create_dataset(samples=120):
-    """
-    Generate a custom classification dataset.
-    """
-    X = np.random.rand(samples, 4)
-    y = (X[:, 0] + 0.5 * X[:, 1] + X[:, 2] > 1.2).astype(int)
-    return X, y
-
-
-def train_model(X_train, y_train):
-    model = RandomForestClassifier(
-        n_estimators=37,
-        max_depth=5,
-        random_state=42
-    )
-    model.fit(X_train, y_train)
-    return model
-
-
-def evaluate_model(model, X_test, y_test):
-    accuracy = model.score(X_test, y_test)
-    print(f"Model Accuracy: {accuracy:.3f}")
-    print("Feature Importances:", model.feature_importances_)
-
+from sklearn.datasets import make_classification
+import os
 
 def main():
-    print("Starting Random Forest training pipeline...")
+    print("Generating synthetic data (Lightning fast)...")
+    X, y = make_classification(n_samples=100, n_features=4, random_state=42)
+    
+    print("Training 'Expensive' Model...")
+    model = RandomForestClassifier(n_estimators=10)
+    model.fit(X, y)
+    
+    # Check for a specific environment variable to simulate a failure if needed
+    if os.getenv("SIMULATE_FAILURE") == "true":
+        raise RuntimeError("Simulated GPU Memory Overflow!")
 
-    X, y = create_dataset()
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.25, random_state=1
-    )
-
-    model = train_model(X_train, y_train)
-
-    print("Training completed successfully.")
-    evaluate_model(model, X_test, y_test)
-
-    print("Pipeline execution finished.")
-
+    print(f"Model trained successfully. Features processed: {model.n_features_in_}")
 
 if __name__ == "__main__":
-    main()
+    try:
+        # Create the log file pre-emptively for the artifact step
+        with open("error_logs.txt", "w") as f:
+            f.write("Log initialized. Starting training sequence...")
+        main()
+    except Exception as e:
+        with open("error_logs.txt", "a") as f:
+            f.write(f"\nFATAL ERROR: {str(e)}")
+        exit(1) # Ensure the job fails so GHA catches it

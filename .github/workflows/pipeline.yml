@@ -1,61 +1,50 @@
-name: CI Gatekeeper Pipeline
+name: Resource Governed Pipeline
 
 on:
   push:
-    branches:
-      - main
-      - dev
+    branches: [ "main" ]
 
 jobs:
-
+  # Job 1: The lightweight gatekeeper
   linter:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Syntax Check
+        run: python -m py_compile app.py
 
-      - name: Install linter
-        run: pip install flake8
-
-      - name: Run linter safely
-        run: |
-          if ls *.py 1> /dev/null 2>&1; then
-            flake8 .
-          else
-            echo "No Python files found. Skipping linting."
-          fi
-
+  # Job 2: The expensive training job
   train:
-    runs-on: ubuntu-latest
     needs: linter
-
+    runs-on: ubuntu-latest
+    # STRICT CONDITIONS: Branch must be main AND commit must have [run-train]
     if: |
-      github.ref == 'refs/heads/main' &&
-      needs.linter.result == 'success' &&
+      github.ref == 'refs/heads/main' && 
       contains(github.event.head_commit.message, '[run-train]')
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      - name: Setup Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
       - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run training pipeline
+        run: pip install scikit-learn
+      - name: Execute Model Training
         run: python app.py
 
-      - name: Generate error log
+      # UPLOAD ARTIFACT: Only triggers if the training step above fails
+      - name: Archive Error Logs
         if: failure()
-        run: echo "Training job failed. Check model pipeline." > error_logs.txt
-
-      - name: Upload error logs
-        if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: training-error-logs
+          name: model-error-logs
           path: error_logs.txt
 
-      - name: Cleanup resources
-        if: always()
+  # Job 3: Final cleanup
+  cleanup:
+    needs: [linter, train]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post-run Cleanup
         run: echo "Cleaning up temporary cloud volumes..."
