@@ -31,6 +31,8 @@ jobs:
         run: pip install scikit-learn
       - name: Execute Model Training
         run: python app.py
+        env:
+          SIMULATE_FAILURE='true'
 
       # UPLOAD ARTIFACT: Only triggers if the training step above fails
       - name: Archive Error Logs
