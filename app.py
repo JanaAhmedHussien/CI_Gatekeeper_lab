@@ -6,7 +6,7 @@ import os
 def main():
     print("Generating synthetic data (Lightning fast)...")
     X, y = make_classification(n_samples=100, n_features=4, random_state=42)
-    
+    # Run fixed one
     print("Training 'Expensive' Model...")
     model = RandomForestClassifier(n_estimators=10)
     model.fit(X, y)
