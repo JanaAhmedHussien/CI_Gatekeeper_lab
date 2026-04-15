@@ -11,6 +11,7 @@ def main():
     model = RandomForestClassifier(n_estimators=10)
     model.fit(X, y)
     
+    
     # Check for a specific environment variable to simulate a failure if needed
     if os.getenv("SIMULATE_FAILURE") == "true":
         raise RuntimeError("Simulated GPU Memory Overflow!")
